@@ -1,0 +1,259 @@
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeClaimList",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-healthy",
+        "namespace": "team1",
+        "uid": "uid-pvc-healthy"
+      },
+      "spec": {
+        "volumeName": "pv-healthy",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-deleting",
+        "namespace": "team1",
+        "uid": "uid-pvc-deleting"
+      },
+      "spec": {
+        "volumeName": "pv-deleting",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-consumers",
+        "namespace": "team1",
+        "uid": "uid-pvc-consumers"
+      },
+      "spec": {
+        "volumeName": "pv-consumers",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-claimref",
+        "namespace": "team1",
+        "uid": "uid-pvc-claimref"
+      },
+      "spec": {
+        "volumeName": "pv-claimref",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-driver",
+        "namespace": "team1",
+        "uid": "uid-pvc-driver"
+      },
+      "spec": {
+        "volumeName": "pv-driver",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-stale",
+        "namespace": "team1",
+        "uid": "uid-pvc-stale"
+      },
+      "spec": {
+        "volumeName": "pv-stale",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-contradict",
+        "namespace": "team1",
+        "uid": "uid-pvc-contradict"
+      },
+      "spec": {
+        "volumeName": "pv-contradict",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-missing-pv",
+        "namespace": "team1",
+        "uid": "uid-pvc-missing"
+      },
+      "spec": {
+        "volumeName": "pv-gone",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-nfs",
+        "namespace": "team1",
+        "uid": "uid-pvc-nfs"
+      },
+      "spec": {
+        "volumeName": "pv-nfs",
+        "accessModes": [
+          "ReadOnlyMany"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-attached",
+        "namespace": "team1",
+        "uid": "uid-pvc-attached"
+      },
+      "spec": {
+        "volumeName": "pv-attached",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolumeClaim",
+      "metadata": {
+        "name": "claim-none",
+        "namespace": "team1",
+        "uid": "uid-pvc-none"
+      },
+      "spec": {
+        "volumeName": "pv-none",
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "resources": {
+          "requests": {
+            "storage": "10Gi"
+          }
+        }
+      },
+      "status": {
+        "phase": "Bound"
+      }
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeList",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-healthy",
+        "uid": "uid-pv-healthy",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-healthy"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-healthy",
+          "uid": "uid-pvc-healthy"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-deleting",
+        "uid": "uid-pv-deleting",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-deleting"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-deleting",
+          "uid": "uid-pvc-deleting"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-consumers",
+        "uid": "uid-pv-consumers",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-consumers"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-consumers",
+          "uid": "uid-pvc-consumers"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-claimref",
+        "uid": "uid-pv-claimref",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-claimref"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-claimref",
+          "uid": "uid-pvc-OTHER"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-driver",
+        "uid": "uid-pv-driver",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-driver"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-driver",
+          "uid": "uid-pvc-driver"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-stale",
+        "uid": "uid-pv-stale",
+        "creationTimestamp": "2026-11-19T10:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-stale"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-stale",
+          "uid": "uid-pvc-stale"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-contradict",
+        "uid": "uid-pv-contradict",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-contradict"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-contradict",
+          "uid": "uid-pvc-contradict"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-m",
+        "uid": "uid-pv-m",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-m"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-missing-pvc",
+          "uid": "uid-pvc-m"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-nfs",
+        "uid": "uid-pv-nfs",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadOnlyMany"
+        ],
+        "nfs": {
+          "server": "nfs.example.com",
+          "path": "/export/pv-nfs"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-nfs",
+          "uid": "uid-pvc-nfs"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-attached",
+        "uid": "uid-pv-attached",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-attached"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-attached",
+          "uid": "uid-pvc-attached"
+        }
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "PersistentVolume",
+      "metadata": {
+        "name": "pv-none",
+        "uid": "uid-pv-none",
+        "creationTimestamp": "2026-11-18T08:00:00Z"
+      },
+      "spec": {
+        "accessModes": [
+          "ReadWriteOnce"
+        ],
+        "csi": {
+          "driver": "csi-driver.example.com",
+          "volumeHandle": "handle-pv-none"
+        },
+        "claimRef": {
+          "apiVersion": "v1",
+          "kind": "PersistentVolumeClaim",
+          "namespace": "team1",
+          "name": "claim-none",
+          "uid": "uid-pvc-none"
+        }
+      }
+    }
+  ]
+}

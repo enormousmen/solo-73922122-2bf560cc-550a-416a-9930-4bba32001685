@@ -1,0 +1,336 @@
+{
+  "apiVersion": "v1",
+  "kind": "PodList",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "stuck-app",
+        "namespace": "team1",
+        "labels": {
+          "app": "stuck-app"
+        }
+      },
+      "spec": {
+        "nodeName": "node-c",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-healthy",
+                "mountPath": "/mnt/vol-claim-healthy"
+              },
+              {
+                "name": "vol-claim-deleting",
+                "mountPath": "/mnt/vol-claim-deleting"
+              },
+              {
+                "name": "vol-claim-consumers",
+                "mountPath": "/mnt/vol-claim-consumers"
+              },
+              {
+                "name": "vol-claim-claimref",
+                "mountPath": "/mnt/vol-claim-claimref"
+              },
+              {
+                "name": "vol-claim-driver",
+                "mountPath": "/mnt/vol-claim-driver"
+              },
+              {
+                "name": "vol-claim-stale",
+                "mountPath": "/mnt/vol-claim-stale"
+              },
+              {
+                "name": "vol-claim-contradict",
+                "mountPath": "/mnt/vol-claim-contradict"
+              },
+              {
+                "name": "vol-claim-missing-pv",
+                "mountPath": "/mnt/vol-claim-missing-pv"
+              },
+              {
+                "name": "vol-claim-missing-pvc",
+                "mountPath": "/mnt/vol-claim-missing-pvc"
+              },
+              {
+                "name": "vol-claim-nfs",
+                "mountPath": "/mnt/vol-claim-nfs"
+              },
+              {
+                "name": "scratch-0",
+                "mountPath": "/mnt/scratch-0"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-healthy",
+            "persistentVolumeClaim": {
+              "claimName": "claim-healthy"
+            }
+          },
+          {
+            "name": "vol-claim-deleting",
+            "persistentVolumeClaim": {
+              "claimName": "claim-deleting"
+            }
+          },
+          {
+            "name": "vol-claim-consumers",
+            "persistentVolumeClaim": {
+              "claimName": "claim-consumers"
+            }
+          },
+          {
+            "name": "vol-claim-claimref",
+            "persistentVolumeClaim": {
+              "claimName": "claim-claimref"
+            }
+          },
+          {
+            "name": "vol-claim-driver",
+            "persistentVolumeClaim": {
+              "claimName": "claim-driver"
+            }
+          },
+          {
+            "name": "vol-claim-stale",
+            "persistentVolumeClaim": {
+              "claimName": "claim-stale"
+            }
+          },
+          {
+            "name": "vol-claim-contradict",
+            "persistentVolumeClaim": {
+              "claimName": "claim-contradict"
+            }
+          },
+          {
+            "name": "vol-claim-missing-pv",
+            "persistentVolumeClaim": {
+              "claimName": "claim-missing-pv"
+            }
+          },
+          {
+            "name": "vol-claim-missing-pvc",
+            "persistentVolumeClaim": {
+              "claimName": "claim-missing-pvc"
+            }
+          },
+          {
+            "name": "vol-claim-nfs",
+            "persistentVolumeClaim": {
+              "claimName": "claim-nfs"
+            }
+          },
+          {
+            "name": "scratch-0",
+            "emptyDir": {}
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "worker-0",
+        "namespace": "team1",
+        "labels": {
+          "app": "worker-0"
+        }
+      },
+      "spec": {
+        "nodeName": "node-b",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-attached",
+                "mountPath": "/mnt/vol-claim-attached"
+              },
+              {
+                "name": "vol-claim-none",
+                "mountPath": "/mnt/vol-claim-none"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-attached",
+            "persistentVolumeClaim": {
+              "claimName": "claim-attached"
+            }
+          },
+          {
+            "name": "vol-claim-none",
+            "persistentVolumeClaim": {
+              "claimName": "claim-none"
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "consumer-1",
+        "namespace": "team1",
+        "labels": {
+          "app": "consumer-1"
+        }
+      },
+      "spec": {
+        "nodeName": "node-a",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-consumers",
+                "mountPath": "/mnt/vol-claim-consumers"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-consumers",
+            "persistentVolumeClaim": {
+              "claimName": "claim-consumers"
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "consumer-2",
+        "namespace": "team1",
+        "labels": {
+          "app": "consumer-2"
+        }
+      },
+      "spec": {
+        "nodeName": "node-a",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-consumers",
+                "mountPath": "/mnt/vol-claim-consumers"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-consumers",
+            "persistentVolumeClaim": {
+              "claimName": "claim-consumers"
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "consumer-done",
+        "namespace": "team1",
+        "labels": {
+          "app": "consumer-done"
+        }
+      },
+      "spec": {
+        "nodeName": "node-a",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-consumers",
+                "mountPath": "/mnt/vol-claim-consumers"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-consumers",
+            "persistentVolumeClaim": {
+              "claimName": "claim-consumers"
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Succeeded"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Pod",
+      "metadata": {
+        "name": "standby-1",
+        "namespace": "team1",
+        "labels": {
+          "app": "standby-1"
+        }
+      },
+      "spec": {
+        "nodeName": "node-d",
+        "containers": [
+          {
+            "name": "main",
+            "image": "registry/app:1",
+            "volumeMounts": [
+              {
+                "name": "vol-claim-healthy",
+                "mountPath": "/mnt/vol-claim-healthy"
+              }
+            ]
+          }
+        ],
+        "volumes": [
+          {
+            "name": "vol-claim-healthy",
+            "persistentVolumeClaim": {
+              "claimName": "claim-healthy"
+            }
+          }
+        ]
+      },
+      "status": {
+        "phase": "Running"
+      }
+    }
+  ]
+}

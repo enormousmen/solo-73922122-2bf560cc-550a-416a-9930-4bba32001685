@@ -12,6 +12,13 @@ from pydantic import BaseModel
 
 from .models import parse_nodes, parse_pods
 from .planner import MAX_DRAIN_NODES, MAX_MIGRATING_PODS, Planner, _node_eligibility
+from .storage import (
+    StorageDiagnoser,
+    parse_pvcs,
+    parse_pvs,
+    parse_storage_pods,
+    parse_vas,
+)
 
 app = FastAPI(title="K8s 缩容落点试算器", version="1.0.0")
 
@@ -127,6 +134,110 @@ async def plan_json(req: PlanRequest):
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return _serialize(Planner(nodes, pods).plan(req.drained_nodes))
+
+
+# --------------------------------------------------------------------------- #
+# CSI ReadWriteOnce 卷挂载排查
+# --------------------------------------------------------------------------- #
+def _build_storage_diagnoser(
+    pod_payload: Any,
+    pvc_payload: Any,
+    pv_payload: Any,
+    va_payload: Any,
+) -> StorageDiagnoser:
+    try:
+        pods = parse_storage_pods(pod_payload)
+        pvcs = parse_pvcs(pvc_payload)
+        pvs = parse_pvs(pv_payload)
+        vas = parse_vas(va_payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return StorageDiagnoser(pods, pvcs, pvs, vas)
+
+
+async def _read_upload(upload: UploadFile | None, label: str) -> Any:
+    if upload is None:
+        raise HTTPException(
+            status_code=400, detail=f"需要上传 {label} JSON 文件"
+        )
+    return _load_json_bytes(await upload.read(), label)
+
+
+@app.post("/api/storage/overview")
+async def storage_overview(
+    pod_list: UploadFile | None = File(default=None),
+    pvc_list: UploadFile | None = File(default=None),
+    pv_list: UploadFile | None = File(default=None),
+    va_list: UploadFile | None = File(default=None),
+):
+    """解析四类清单，返回可选 Pod 及其 PVC 卷（标注是否在 CSI RWO 排查范围）。"""
+    payloads = [
+        await _read_upload(pod_list, "PodList"),
+        await _read_upload(pvc_list, "PersistentVolumeClaimList"),
+        await _read_upload(pv_list, "PersistentVolumeList"),
+        await _read_upload(va_list, "VolumeAttachmentList"),
+    ]
+    diagnoser = _build_storage_diagnoser(*payloads)
+    return {"pods": diagnoser.overview()}
+
+
+@app.post("/api/storage/diagnose")
+async def storage_diagnose(
+    pod_list: UploadFile | None = File(default=None),
+    pvc_list: UploadFile | None = File(default=None),
+    pv_list: UploadFile | None = File(default=None),
+    va_list: UploadFile | None = File(default=None),
+    pod_ref: str = Form(default=""),
+):
+    """对选中 Pod 的 CSI RWO 卷做挂载排查（multipart 表单调用）。"""
+    payloads = [
+        await _read_upload(pod_list, "PodList"),
+        await _read_upload(pvc_list, "PersistentVolumeClaimList"),
+        await _read_upload(pv_list, "PersistentVolumeList"),
+        await _read_upload(va_list, "VolumeAttachmentList"),
+    ]
+    namespace, name = _split_pod_ref(pod_ref)
+    diagnoser = _build_storage_diagnoser(*payloads)
+    try:
+        return diagnoser.diagnose(namespace, name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+class StorageDiagnoseRequest(BaseModel):
+    pod_list: Any
+    pvc_list: Any
+    pv_list: Any
+    va_list: Any
+    pod_ref: str
+
+
+@app.post("/api/storage/diagnose-json")
+async def storage_diagnose_json(req: StorageDiagnoseRequest):
+    """供脚本/curl 直接以 JSON 体调用的挂载排查接口。"""
+    namespace, name = _split_pod_ref(req.pod_ref)
+    diagnoser = _build_storage_diagnoser(
+        req.pod_list, req.pvc_list, req.pv_list, req.va_list
+    )
+    try:
+        return diagnoser.diagnose(namespace, name)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def _split_pod_ref(pod_ref: str) -> tuple[str, str]:
+    if not pod_ref or "/" not in pod_ref:
+        raise HTTPException(
+            status_code=400,
+            detail="pod_ref 必须是 命名空间/Pod名称 形式",
+        )
+    namespace, name = pod_ref.split("/", 1)
+    if not namespace or not name:
+        raise HTTPException(
+            status_code=400,
+            detail="pod_ref 必须是 命名空间/Pod名称 形式",
+        )
+    return namespace, name
 
 
 def _serialize(result) -> dict:

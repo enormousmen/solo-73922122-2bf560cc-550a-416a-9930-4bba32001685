@@ -3,14 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>K8s 缩容落点试算器</title>
+<title>K8s 缩容落点试算器 / CSI 卷挂载排查</title>
 <style>
-  :root { --border:#d0d7de; --bg-soft:#f6f8fa; --red:#cf222e; --green:#1a7f37; --blue:#0969da; }
+  :root { --border:#d0d7de; --bg-soft:#f6f8fa; --red:#cf222e; --green:#1a7f37;
+          --blue:#0969da; --orange:#9a6700; --purple:#8250df; }
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
          margin: 0; padding: 24px; color: #1f2328; background: #fff; }
   h1 { font-size: 20px; margin: 0 0 4px; }
   .sub { color: #57606a; font-size: 13px; margin-bottom: 20px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .tab { padding: 8px 20px; border: 1px solid var(--border); border-radius: 8px 8px 0 0;
+         background: var(--bg-soft); cursor: pointer; font-size: 14px; }
+  .tab.active { background: #fff; border-bottom-color: #fff; color: var(--blue);
+                font-weight: 600; margin-bottom: -1px; position: relative; z-index: 1; }
+  .pane { border: 1px solid var(--border); border-radius: 0 8px 8px 8px;
+          padding: 20px; margin-top: -1px; }
+  .pane.hidden, .hidden { display: none; }
   .card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
   .card h2 { font-size: 15px; margin: 0 0 12px; }
   .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
@@ -21,11 +30,16 @@
   button:disabled { background: #8c959f; cursor: not-allowed; }
   button.secondary { background: #f6f8fa; color: #1f2328; border: 1px solid var(--border); }
   table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left;
+           vertical-align: top; }
   th { background: var(--bg-soft); }
-  .tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px;
+         white-space: nowrap; }
   .tag.ok { background: #dafbe1; color: var(--green); }
   .tag.bad { background: #ffebe9; color: var(--red); }
+  .tag.warn { background: #fff8c5; color: var(--orange); }
+  .tag.info { background: #ddf4ff; color: var(--blue); }
+  .tag.purple { background: #fbefff; color: var(--purple); }
   .tag.muted { background: var(--bg-soft); color: #57606a; }
   .node-line { padding: 8px 10px; border-bottom: 1px solid var(--border); display: flex;
                align-items: center; gap: 10px; font-size: 13px; }
@@ -37,51 +51,125 @@
   .muted { color: #57606a; }
   code { background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
   .scroll { max-height: 340px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
-  .hidden { display: none; }
   .count { font-size: 12px; color: #57606a; margin-left: auto; }
+  .vol-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+              margin-bottom: 12px; }
+  .vol-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+              font-size: 14px; margin-bottom: 8px; }
+  .vol-body { font-size: 13px; }
+  .vol-body ul { margin: 6px 0 0 18px; padding: 0; }
+  .kv { color: #57606a; font-size: 12px; }
+  .deleting { color: var(--orange); font-weight: 600; }
 </style>
 </head>
 <body>
-<h1>Kubernetes 缩容落点试算器</h1>
+<h1>Kubernetes 值班工具箱</h1>
 <div class="sub">
-  上传同一批 NodeList / PodList JSON 快照，勾选要下线的节点（最多 <b>6</b> 个），
-  待迁 Pod 上限 <b>8</b> 个；仅支持无污点节点与无卷、无 init 容器的单容器 Pod。
+  缩容落点试算：上传 NodeList / PodList 快照寻找完整迁移方案；
+  CSI 卷挂载排查：上传同批 Pod / PVC / PV / VolumeAttachment 清单，
+  定位 Pod 分节点后卡在挂载阶段的 RWO 卷占用问题。
 </div>
 
-<div class="card">
-  <h2>1. 上传快照</h2>
-  <div class="row">
-    <div class="field">
-      <label>NodeList JSON</label>
-      <input type="file" id="nodeFile" accept=".json,application/json">
+<div class="tabs">
+  <div class="tab active" id="tabPlanner">缩容落点试算</div>
+  <div class="tab" id="tabStorage">CSI 卷挂载排查</div>
+</div>
+
+<!-- ===================== 页面一：缩容落点试算 ===================== -->
+<div class="pane" id="panePlanner">
+  <div class="card">
+    <h2>1. 上传快照</h2>
+    <div class="row">
+      <div class="field">
+        <label>NodeList JSON</label>
+        <input type="file" id="nodeFile" accept=".json,application/json">
+      </div>
+      <div class="field">
+        <label>PodList JSON</label>
+        <input type="file" id="podFile" accept=".json,application/json">
+      </div>
+      <button id="loadBtn">读取快照</button>
+      <span id="loadMsg" class="muted" style="font-size:13px"></span>
     </div>
-    <div class="field">
-      <label>PodList JSON</label>
-      <input type="file" id="podFile" accept=".json,application/json">
+  </div>
+
+  <div class="card hidden" id="selectCard">
+    <h2>2. 勾选要下线的节点
+      <span class="count" id="selectCount"></span>
+    </h2>
+    <div id="nodeList" class="scroll"></div>
+    <div style="margin-top:12px" class="row">
+      <button id="planBtn">试算落点</button>
+      <button class="secondary" id="clearBtn">撤下当前方案</button>
     </div>
-    <button id="loadBtn">读取快照</button>
-    <span id="loadMsg" class="muted" style="font-size:13px"></span>
   </div>
+
+  <div id="resultArea"></div>
 </div>
 
-<div class="card hidden" id="selectCard">
-  <h2>2. 勾选要下线的节点
-    <span class="count" id="selectCount"></span>
-  </h2>
-  <div id="nodeList" class="scroll"></div>
-  <div style="margin-top:12px" class="row">
-    <button id="planBtn">试算落点</button>
-    <button class="secondary" id="clearBtn">撤下当前方案</button>
+<!-- ===================== 页面二：CSI 卷挂载排查 ===================== -->
+<div class="pane hidden" id="paneStorage">
+  <div class="card">
+    <h2>1. 上传同批清单（4 个 JSON）</h2>
+    <div class="row">
+      <div class="field">
+        <label>PodList JSON</label>
+        <input type="file" id="stPodFile" accept=".json,application/json">
+      </div>
+      <div class="field">
+        <label>PersistentVolumeClaimList JSON</label>
+        <input type="file" id="stPvcFile" accept=".json,application/json">
+      </div>
+      <div class="field">
+        <label>PersistentVolumeList JSON</label>
+        <input type="file" id="stPvFile" accept=".json,application/json">
+      </div>
+      <div class="field">
+        <label>VolumeAttachmentList JSON</label>
+        <input type="file" id="stVaFile" accept=".json,application/json">
+      </div>
+      <button id="stLoadBtn">读取清单</button>
+      <span id="stLoadMsg" class="muted" style="font-size:13px"></span>
+    </div>
+    <div class="muted" style="font-size:12px;margin-top:8px">
+      排查范围仅限选中 Pod 已知需挂接的 CSI <code>ReadWriteOnce</code> 卷；
+      非 CSI、非 RWO、非 PVC 卷只列出但不参与核对。
+    </div>
   </div>
-</div>
 
-<div id="resultArea"></div>
+  <div class="card hidden" id="stSelectCard">
+    <h2>2. 选中卡在挂载阶段的 Pod
+      <span class="count" id="stSelectCount"></span>
+    </h2>
+    <div id="stPodList" class="scroll"></div>
+    <div style="margin-top:12px" class="row">
+      <button id="stRunBtn">开始排查</button>
+      <button class="secondary" id="stClearBtn">撤下排查结果</button>
+    </div>
+  </div>
+
+  <div id="stResultArea"></div>
+</div>
 
 <script>
+const $ = (id) => document.getElementById(id);
+
+/* ----------------------------- 标签页切换 ----------------------------- */
+$("tabPlanner").onclick = () => switchTab("planner");
+$("tabStorage").onclick = () => switchTab("storage");
+function switchTab(which) {
+  const planner = which === "planner";
+  $("tabPlanner").classList.toggle("active", planner);
+  $("tabStorage").classList.toggle("active", !planner);
+  $("panePlanner").classList.toggle("hidden", !planner);
+  $("paneStorage").classList.toggle("hidden", planner);
+}
+
+/* ===================================================================== */
+/* 页面一：缩容落点试算（原有逻辑）                                       */
+/* ===================================================================== */
 let overview = null;
 let limits = { max_drain_nodes: 6, max_migrating_pods: 8 };
-
-const $ = (id) => document.getElementById(id);
 
 $("loadBtn").onclick = async () => {
   const nf = $("nodeFile").files[0], pf = $("podFile").files[0];
@@ -234,6 +322,197 @@ function renderResult(data) {
   $("resultArea").innerHTML = html;
 }
 
+/* ===================================================================== */
+/* 页面二：CSI RWO 卷挂载排查                                              */
+/* ===================================================================== */
+let stOverview = null;
+
+const ST_STATUS = {
+  needs_verification: { label: "待核实", cls: "bad" },
+  blocked_by_other_nodes: { label: "被其他节点占用", cls: "warn" },
+  attached_on_target: { label: "目标节点已挂接", cls: "ok" },
+  no_attachment: { label: "尚无已挂接记录", cls: "info" },
+  out_of_scope: { label: "不在排查范围", cls: "muted" },
+};
+
+$("stLoadBtn").onclick = async () => {
+  const files = [
+    ["pod_list", $("stPodFile").files[0], "PodList"],
+    ["pvc_list", $("stPvcFile").files[0], "PersistentVolumeClaimList"],
+    ["pv_list", $("stPvFile").files[0], "PersistentVolumeList"],
+    ["va_list", $("stVaFile").files[0], "VolumeAttachmentList"],
+  ];
+  const missing = files.filter(f => !f[1]).map(f => f[2]);
+  if (missing.length) { stSetMsg("缺少文件：" + missing.join("、"), true); return; }
+  const fd = new FormData();
+  files.forEach(f => fd.append(f[0], f[1]));
+  stSetMsg("读取中…");
+  stClearResult();
+  try {
+    const resp = await fetch("/api/storage/overview", { method: "POST", body: fd });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || resp.statusText);
+    stOverview = data.pods;
+    renderStPods();
+    const inScope = stOverview.reduce((n, p) => n + p.in_scope_count, 0);
+    stSetMsg(`已载入 ${stOverview.length} 个 Pod、${inScope} 个 CSI RWO 待挂接卷`);
+  } catch (e) {
+    stOverview = null;
+    $("stSelectCard").classList.add("hidden");
+    stClearResult();
+    stSetMsg("读取失败：" + e.message, true);
+  }
+};
+
+function stSetMsg(text, bad) {
+  const el = $("stLoadMsg");
+  el.textContent = text;
+  el.style.color = bad ? "var(--red)" : "#57606a";
+}
+
+function renderStPods() {
+  $("stSelectCard").classList.remove("hidden");
+  const box = $("stPodList");
+  box.innerHTML = "";
+  stOverview.forEach((p) => {
+    const line = document.createElement("div");
+    line.className = "node-line";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "stPod";
+    radio.value = p.ref;
+    radio.disabled = p.in_scope_count === 0;
+    radio.onchange = () => {
+      $("stSelectCount").textContent =
+        `已选 ${p.ref}（目标节点 ${p.node || "未调度"}，CSI RWO 卷 ${p.in_scope_count} 个）`;
+    };
+    const name = document.createElement("b");
+    name.textContent = p.ref;
+    const phase = document.createElement("span");
+    phase.className = "tag " + (p.active ? "info" : "muted");
+    phase.textContent = p.phase;
+    const spec = document.createElement("span");
+    spec.className = "muted";
+    spec.textContent = `节点=${p.node || "未调度"} PVC 卷=${p.pvc_count} 个，`
+      + `其中 CSI RWO ${p.in_scope_count} 个`;
+    line.append(radio, name, phase, spec);
+    if (p.in_scope_count === 0) {
+      const r = document.createElement("span");
+      r.className = "muted";
+      r.style.fontSize = "12px";
+      r.textContent = "（无 CSI RWO 待挂接卷，不可选）";
+      line.append(r);
+    }
+    box.append(line);
+  });
+  $("stSelectCount").textContent = "未选择 Pod";
+}
+
+$("stRunBtn").onclick = async () => {
+  const checked = $("stPodList").querySelector('input[name="stPod"]:checked');
+  if (!checked) { stRenderFail(["请先选中一个 Pod"]); return; }
+  const fd = new FormData();
+  fd.append("pod_list", $("stPodFile").files[0]);
+  fd.append("pvc_list", $("stPvcFile").files[0]);
+  fd.append("pv_list", $("stPvFile").files[0]);
+  fd.append("va_list", $("stVaFile").files[0]);
+  fd.append("pod_ref", checked.value);
+  $("stRunBtn").disabled = true;
+  try {
+    const resp = await fetch("/api/storage/diagnose", { method: "POST", body: fd });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.detail || resp.statusText);
+    renderStResult(data);
+  } catch (e) {
+    // 排查失败：撤下旧结果，不残留任何卷结论
+    stRenderFail(["排查请求失败：" + e.message]);
+  } finally {
+    $("stRunBtn").disabled = false;
+  }
+};
+
+$("stClearBtn").onclick = () => stClearResult(true);
+
+function stClearResult(showNote) {
+  $("stResultArea").innerHTML = showNote
+    ? '<div class="banner muted" style="background:#f6f8fa;border:1px solid #d0d7de">已撤下排查结果。</div>'
+    : "";
+}
+
+function stRenderFail(messages) {
+  // 排查失败：撤下旧结果
+  $("stResultArea").innerHTML =
+    '<div class="banner fail"><b>挂载排查失败，旧结果已撤下。</b><ul style="margin:8px 0 0 18px">'
+    + messages.map(m => `<li>${escapeHtml(m)}</li>`).join("") + "</ul></div>";
+}
+
+function stTag(status) {
+  const meta = ST_STATUS[status] || { label: status, cls: "muted" };
+  return `<span class="tag ${meta.cls}">${escapeHtml(meta.label)}</span>`;
+}
+
+function renderStResult(data) {
+  const s = data.summary;
+  let html = '<div class="banner ok"><b>排查完成：</b>'
+    + `Pod <code>${escapeHtml(data.pod)}</code>，目标节点 <b>${escapeHtml(data.target_node || "未调度")}</b>；`
+    + `共 ${s.total} 个卷：待核实 ${s.needs_verification} 个、被其他节点占用 ${s.blocked_by_other_nodes} 个、`
+    + `目标节点已挂接 ${s.attached_on_target} 个、尚无挂接记录 ${s.no_attachment} 个、`
+    + `范围外 ${s.out_of_scope} 个。</div>`;
+
+  data.volumes.forEach((v) => {
+    const meta = ST_STATUS[v.status] || { label: v.status };
+    html += '<div class="vol-card"><div class="vol-head">';
+    html += `<b>${escapeHtml(v.volume_name)}</b> ${stTag(v.status)}`;
+    const bits = [];
+    if (v.claim_name) bits.push(`PVC <code>${escapeHtml(v.claim_namespace + "/" + v.claim_name)}</code>`);
+    if (v.pv_name) bits.push(`PV <code>${escapeHtml(v.pv_name)}</code>`);
+    if (v.driver) bits.push(`驱动 <code>${escapeHtml(v.driver)}</code>`);
+    if (bits.length) html += `<span class="kv">${bits.join(" · ")}</span>`;
+    html += "</div><div class='vol-body'>";
+
+    if (v.reasons && v.reasons.length) {
+      html += "<ul>" + v.reasons.map(r => `<li>${escapeHtml(r)}</li>`).join("") + "</ul>";
+    }
+
+    if (v.status === "blocked_by_other_nodes" && v.other_node_attachments.length) {
+      html += "<div style='margin-top:6px'>RWO 卷仍挂在其他节点（含正在删除但 attached=true 的记录）：</div>";
+      html += "<table style='margin-top:6px'><thead><tr><th>其他节点</th><th>VolumeAttachment</th>"
+        + "<th>同节点未结束且引用同一 PVC 的 Pod</th></tr></thead><tbody>";
+      v.other_node_attachments.forEach((a) => {
+        const pods = a.blocking_pods.length
+          ? a.blocking_pods.map(p =>
+              `<div><code>${escapeHtml(p.pod)}</code> <span class='muted'>(${escapeHtml(p.phase)})</span></div>`
+            ).join("")
+          : "<span class='muted'>无</span>";
+        const del = a.deleting ? " <span class='deleting'>正在删除但 attached=true</span>" : "";
+        html += `<tr><td><b>${escapeHtml(a.node)}</b></td>`
+          + `<td><code>${escapeHtml(a.volume_attachment)}</code>${del}</td>`
+          + `<td>${pods}</td></tr>`;
+      });
+      html += "</tbody></table>";
+    }
+
+    if (v.status === "attached_on_target" && v.target_attachment) {
+      const names = v.target_attachment.volume_attachments
+        .map(a => "<code>" + escapeHtml(a.volume_attachment) + "</code>"
+          + (a.deleting ? " <span class='deleting'>（正在删除但 attached=true）</span>" : ""))
+        .join("、");
+      html += `<div style='margin-top:6px'>目标节点 <b>${escapeHtml(v.target_attachment.node)}</b> `
+        + `已有 attached=true 的挂接记录：${names}。`
+        + "若 Pod 仍卡挂载，需进一步排查节点内 mount/设备状态。</div>";
+    }
+
+    if (v.status === "no_attachment") {
+      html += "<div style='margin-top:6px'>任何节点都没有 attached=true 的挂接记录，"
+        + "目标节点尚未完成挂接；可等待 CSI 处理或检查 CSI 驱动/控制面事件。</div>";
+    }
+    html += "</div></div>";
+  });
+
+  $("stResultArea").innerHTML = html;
+}
+
+/* ----------------------------- 公共工具 ----------------------------- */
 function section(title, body) {
   return `<div class="card"><h2>${escapeHtml(title)}</h2>${body}</div>`;
 }

@@ -1,0 +1,169 @@
+{
+  "apiVersion": "storage.k8s.io/v1",
+  "kind": "VolumeAttachmentList",
+  "items": [
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-healthy-a",
+        "creationTimestamp": "2026-11-18T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-healthy"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-deleting-a",
+        "creationTimestamp": "2026-11-18T09:00:00Z",
+        "deletionTimestamp": "2026-11-20T01:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-deleting"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-consumers-a",
+        "creationTimestamp": "2026-11-18T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-consumers"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-driver-a",
+        "creationTimestamp": "2026-11-18T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-wrong.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-driver"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-stale-a",
+        "creationTimestamp": "2026-11-17T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-stale"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-contradict-a-1",
+        "creationTimestamp": "2026-11-18T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-contradict"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-contradict-a-2",
+        "creationTimestamp": "2026-11-18T09:05:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-a",
+        "source": {
+          "persistentVolumeName": "pv-contradict"
+        }
+      },
+      "status": {
+        "attached": false
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-attached-b",
+        "creationTimestamp": "2026-11-18T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-b",
+        "source": {
+          "persistentVolumeName": "pv-attached"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    },
+    {
+      "apiVersion": "storage.k8s.io/v1",
+      "kind": "VolumeAttachment",
+      "metadata": {
+        "name": "va-healthy-d",
+        "creationTimestamp": "2026-11-19T09:00:00Z"
+      },
+      "spec": {
+        "attacher": "csi-driver.example.com",
+        "nodeName": "node-d",
+        "source": {
+          "persistentVolumeName": "pv-healthy"
+        }
+      },
+      "status": {
+        "attached": true
+      }
+    }
+  ]
+}
